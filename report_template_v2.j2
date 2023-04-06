@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+ 
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+ 
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+        integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+ 
+    <title>ECR Scan Report</title>
+</head>
+ 
+<body>
+<div class="container-fluid">
+    <table class="table table-borderless container">
+    <tr class="row">
+    {%if type=='AWS_ECR_CONTAINER_IMAGE'%}
+        <th class="col-2 text-right"> Image </th><th class="col-10"> {{ image }}:{{ tag }} </th></tr>
+    {%elif type=='AWS_EC2_INSTANCE'%}
+        <th class="col-2 text-right"> EC2 Instance ID </th><th class="col-10"> {{ ec2_id }}</th></tr>
+        <tr class="row">
+            <th class="col-2 text-right"> Tags </th><th class="col-10">  {{ tags }} </th>
+        </tr>
+    {%endif%}
+
+    <tr class="row">
+    <th class="col-2 text-right"> Scan Date </th><th class="col-10">  {{ scan_date }} </th>
+    </tr>
+    <tr class="row">
+    <th class="col-2 text-right"> Findings count </th><th class="col-10">  {{ findings_count }} </th>
+    </tr>
+    </table> 
+    {%if type=='AWS_ECR_CONTAINER_IMAGE'%}
+        <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Severity</th>
+                <th scope="col">Package</th>
+                <th scope="col">Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for finding in findings %}
+                <tr>
+                    <th scope="row"><a href='{{ finding['uri'] }}'>{{ finding['name'] }}</a></th>
+                    <td>{{ finding['severity'] }}</td>
+                    <td>{{ finding['package'] }}</td>
+                    <td>{{ finding['description'] }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {%elif type=='AWS_EC2_INSTANCE'%}
+        <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Severity</th>
+                <th scope="col">Type</th>
+                <th scope="col">Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for finding in findings %}
+                <tr>
+                    <th scope="row">{{ finding['name'] }}</th>
+                    <td>{{ finding['severity'] }}</td>
+                    <td>{{ finding['type'] }}</td>
+                    <td>{{ finding['description'] }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {%endif%}
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+        crossorigin="anonymous"></script>
+</div>
+</body>
+ 
+</html>
