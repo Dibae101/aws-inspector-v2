@@ -2,8 +2,11 @@ import boto3
 import datetime
 
 class InspectorV2Findigs:
-    def __init__(self, filter_criteria, active_status=True) -> None:
+    def __init__(self, filter_criteria, tag_name, tag_value, active_status=True) -> None:
         self.client = boto3.client("inspector2")
+        self.tag_name = tag_name
+        self.tag_value = tag_value
+
         if active_status:
             filter_criteria.update(
                 {
@@ -17,6 +20,7 @@ class InspectorV2Findigs:
             )
 
         self.filter_criteria = {"filterCriteria": filter_criteria}
+        
 
     def get_findigs(self):
         """Fetch findings from inspector v2 with provided filters. Handles pagination internally."""
@@ -29,6 +33,7 @@ class InspectorV2Findigs:
         for page in page_iterator:
             all_findings.extend(page.get("findings", []))
         return all_findings
+    
 
     def evaluate_findings_for_ecr(self):
         """Prepare required context for ECR report PDF"""
@@ -52,8 +57,11 @@ class InspectorV2Findigs:
         print("Evaluating findings for EC2.")
         refined_findings = {}
         findings = self.get_findigs()
+
+        print(self.filter_criteria)
+
         if not findings:
-            return {"findings_count": {"HIGH": 23, "MEDIUM": 59, "CRITICAL": 4, "UNTRIAGED": 3, "INFORMATIONAL": 2}, "findings" : [], "scanned_at" : datetime.datetime.now(), "ec2_id": ec2_id, "tags": tag, "tag_name": tag_name}
+            return {"findings_count": {"HIGH": 0, "MEDIUM": 0, "CRITICAL": 0, "UNTRIAGED": 0, "INFORMATIONAL": 0}, "findings" : [], "scanned_at" : datetime.datetime.now(), "ec2_id": self.filter_criteria["filterCriteria"]["componentId"][0]["value"], "tags": self.tag_value, "tag_name": self.tag_name}
         
         refined_findings["findings_count"] = self.evaluate_findings_count(findings)
         refined_findings["findings"] = self.clean_findings_ec2(findings)

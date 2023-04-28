@@ -46,7 +46,22 @@ def get_ec2_findings_filter(id):
 
 def get_ec2_findings(id):
     """Fetch Inspector v2 findings as per provided filter."""
-    findings = InspectorV2Findigs(get_ec2_findings_filter(id)).evaluate_findings_for_ec2()
+    ec2_instance = ec2.Instance(id)
+    tags = ec2_instance.tags
+    tag_name = ''
+    tag_value = ''
+    if tags:
+        tags_str = []
+
+        print(tags)
+        for tag in tags:
+            if tag['Key'] == 'Name':
+                tag_name = tag['Value']
+            tags_str.append(f"{tag['Key']}: {tag['Value']}")
+        tag_value= ', '.join(tags_str)
+        print(f"No findings found for EC2 instance {id} with tag name {tag_name} and tag value {tag_value}.")
+    
+    findings = InspectorV2Findigs(get_ec2_findings_filter(id), tag_name, tag_value).evaluate_findings_for_ec2()
     return findings
 
 def get_findings_str(finding_severity_counts):
@@ -70,14 +85,15 @@ def report_findings():
         }
     ]
     instances = ec2.instances.filter(Filters=filters)
+
+    for instance in instances:
+        print(instance)
+
     instance_ids = [i.id for i in instances]
     
     for id in instance_ids:
         findings_summary = get_ec2_findings(id)
-        
-        if not findings_summary:
-            print(f"No findings found for {id}")
-            continue
+        # Get the EC2 instance tags if no findings are found
         
         findings_counts = findings_summary['findings_count']
         if not findings_counts:
@@ -97,7 +113,7 @@ def generate_detailed_report(findings):
     
     utc_scanned_at = scanned_at.astimezone(pytz.timezone("UTC")).isoformat()
     findings_count = get_findings_str(findings_summary['findings_count'])
-    report_file_name = f"{findings_summary['ec2_id']}.html"
+    report_file_name = f"{findings_summary['tag_name']}.html"
 
     report_file = open(report_file_name, mode="w")
     template_loader = jinja2.FileSystemLoader(searchpath="./")

@@ -167,10 +167,16 @@ def report_findings():
 
 def generate_detailed_report(image):
     """Create new HTML report"""
+    print("image details--------------------------------")
+    print(image)
+    print("summary details--------------------------------")
+    print(image["findings_summary"])
     findings_summary = image["findings_summary"]
+
     scanned_at = findings_summary['scanned_at']
     
     utc_scanned_at = scanned_at.astimezone(pytz.timezone("UTC")).isoformat()
+
     findings_count = get_findings_str(findings_summary['findings_count'])
     report_file_name = image["id"] + "_" + image["tag"] + ".html"
 
