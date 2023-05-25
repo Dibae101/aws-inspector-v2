@@ -6,7 +6,7 @@ import jinja2
 import pdfkit
 import boto3
 
-
+ 
 ec2 = boto3.resource("ec2")
 
 def convert_report_to_pdf(report_file_name):
@@ -33,11 +33,11 @@ def send_report_in_slack(report_file_name):
 def get_ec2_findings_filter(id):
     """Prepare Inspector v2 filter for EC2 findings filter."""
     ec2_filter = {
-        "componentId": [
+        "resourceId": [
             {"comparison": "EQUALS", "value": id},
         ],
-        "componentType": [
-            {"comparison": "EQUALS", "value": "AWS::EC2::Instance"},
+        "resourceType": [
+            {"comparison": "EQUALS", "value": "AWS_EC2_INSTANCE"},
         ],
     }
 
