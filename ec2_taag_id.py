@@ -1,5 +1,5 @@
 from slack_sdk import WebClient
-from inspector_reporter import InspectorV2Findigs
+from inspector_reporter_ec2 import InspectorV2Findigs
 import os
 import pytz
 import jinja2
@@ -8,9 +8,11 @@ import boto3
 import datetime
 import argparse
 
-parser  = argparse.ArgumentParser() 
+parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--ec_ids", help="EC2 Instance ID")
+parser.add_argument("-t", "--tag_name", help="EC2 Tag Name")
 ec2 = boto3.resource("ec2")
+
 
 def convert_report_to_pdf(report_file_name):
     """Convert HTML report to PDF"""
@@ -32,7 +34,8 @@ def send_report_in_slack(report_file_name):
         filename=report_file_name,
         filetype="pdf",
     )
-    
+
+
 def get_ec2_findings_filter(ids):
     """Prepare Inspector v2 filter for EC2 findings filter."""
     ec2_filter = {
@@ -43,31 +46,34 @@ def get_ec2_findings_filter(ids):
     }
     for id in ids:
         ec2_filter["resourceId"].append({"comparison": "EQUALS", "value": id})
-    
+
     return ec2_filter
 
 
-def get_ec2_findings(ids):
+def get_ec2_findings(ids, tag_name):
     """Fetch Inspector v2 findings for multiple EC2 instances."""
     ec2_findings = {}
     for id in ids:
         ec2_instance = ec2.Instance(id)
         tags = ec2_instance.tags
-        tag_name = ""
         tag_value = ""
         if tags:
-            tags_str = []
             for tag in tags:
-                if tag["Key"] == "Name":
-                    tag_name = tag["Value"]
-                tags_str.append(f"{tag['Key']}: {tag['Value']}")
-            tag_value = ", ".join(tags_str)
+                if tag["Key"] == "Name" and tag["Value"] == tag_name:
+                    tag_value = tag["Value"]
+                    break
+
+        if tag_value:
+            findings = InspectorV2Findigs(
+                get_ec2_findings_filter([id]), tag_name, tag_value
+            ).evaluate_findings_for_ec2()
+            ec2_findings[id] = findings
+        else:
             print(
-                f"No findings found for EC2 instance {id} with tag name {tag_name} and tag value {tag_value}."
+                f"No EC2 instance found with the tag name '{tag_name}' and ID '{id}'."
             )
-        findings = InspectorV2Findigs(get_ec2_findings_filter([id]), tag_name, tag_value).evaluate_findings_for_ec2()
-        ec2_findings[id] = findings
     return ec2_findings
+
 
 def get_findings_str(finding_severity_counts):
     """Aggregates findings counts by severity in a string"""
@@ -81,49 +87,49 @@ def get_findings_str(finding_severity_counts):
     return findings_count_str
 
 
-def report_findings():
+def report_findings(tag_name):
     """Report on findings"""
     filters = [
         {
-            'Name': 'instance-state-name', 
-            'Values': ['running']
+            "Name": "instance-state-name",
+            "Values": ["running"],
         }
     ]
     instances = ec2.instances.filter(Filters=filters)
-
+    instance_ids = []
     for instance in instances:
-        print(instance)
+        instance_tags = instance.tags
+        if instance_tags:
+            for tag in instance_tags:
+                if tag["Key"] == "Name" and tag["Value"] == tag_name:
+                    instance_ids.append(instance.id)
+                    break
 
-    instance_ids = [i.id for i in instances]
-    
-    for id in instance_ids:
-        findings_summary = get_ec2_findings(id)
-        # Get the EC2 instance tags if no findings are found
-        
-        findings_counts = findings_summary['findings_count']
-        if not findings_counts:
-            print(f"EC2 {id} is clean.")
-        else:
-            print(
-                f"EC2 {id} has the following findings {get_findings_str(findings_counts)}"
-            )
-        generate_detailed_report(findings_summary)
-
+    if instance_ids:
+        findings_summary = get_ec2_findings(instance_ids, tag_name)
+        for id, summary in findings_summary.items():
+            findings_counts = summary["findings_count"]
+            if not findings_counts:
+                print(f"EC2 {id} is clean.")
+            else:
+                print(
+                    f"EC2 {id} has the following findings: {get_findings_str(findings_counts)}"
+                )
+            generate_detailed_report(summary)
+    else:
+        print(f"No running EC2 instances found with the tag name '{tag_name}'.")
 
 
 def generate_detailed_report(findings):
     """Create new HTML report"""
     findings_summary = findings
-    scanned_at = findings_summary['scanned_at']
-    
+    scanned_at = findings_summary["scanned_at"]
+
     utc_scanned_at = scanned_at.astimezone(pytz.timezone("UTC")).isoformat()
-    findings_count = get_findings_str(findings_summary['findings_count'])
-    
-    # if findings_summary['tag_name']:
-    #     report_filename = findings_summary['tag_name']
-    # else:
-    report_filename = findings_summary['tag_name']
-    
+    findings_count = get_findings_str(findings_summary["findings_count"])
+
+    report_filename = findings_summary["tag_name"]
+
     report_file_name = f"{report_filename}.html"
 
     report_file = open(report_file_name, mode="w")
@@ -133,12 +139,12 @@ def generate_detailed_report(findings):
     template = template_env.get_template(template_file)
     report_file.write(
         template.render(
-            ec2_id=findings_summary['ec2_id'],
-            tags=findings_summary['tags'],
+            ec2_id=findings_summary["ec2_id"],
+            tags=findings_summary["tags"],
             scan_date=utc_scanned_at,
             findings_count=findings_count,
-            findings=findings_summary['findings'],
-            type="AWS_EC2_INSTANCE"
+            findings=findings_summary["findings"],
+            type="AWS_EC2_INSTANCE",
         )
     )
     report_file.close()
@@ -146,23 +152,11 @@ def generate_detailed_report(findings):
     send_report_in_slack(pdf_report_file_name)
 
 
-
-
 # main entry function
 if __name__ == "__main__":
     args = parser.parse_args()
-    ec2_ids = args.ec_ids
-    if ec2_ids:
-        ec2_ids_list = ec2_ids.split(",")
-        findings_summary = get_ec2_findings(ec2_ids_list)
-        for id, summary in findings_summary.items():
-            findings_counts = summary['findings_count']
-            if not findings_counts:
-                print(f"EC2 {id} is clean.")
-            else:
-                print(
-                    f"EC2 {id} has the following findings {get_findings_str(findings_counts)}"
-                )
-            generate_detailed_report(summary)
+    tag_name = args.tag_name
+    if tag_name:
+        report_findings(tag_name)
     else:
-        report_findings()
+        print("Please provide a valid EC2 tag name using the -t/--tag_name option.")

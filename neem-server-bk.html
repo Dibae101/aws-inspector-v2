@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+ 
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+ 
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+        integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+ 
+    <title>ECR Scan Report</title>
+</head>
+ 
+<body>
+<div class="container-fluid">
+    <table class="table table-borderless container">
+    <tr class="row">
+    
+        <th class="col-2 text-right"> EC2 Instance ID </th><th class="col-10"> i-0b14657ac5c95f8a0</th></tr>
+        <tr class="row">
+            <th class="col-2 text-right"> Tags </th><th class="col-10">  Name: neem-server-bk </th>
+        </tr>
+    
+
+    <tr class="row">
+    <th class="col-2 text-right"> Scan Date </th><th class="col-10">  2023-05-06T10:05:09.660000+00:00 </th>
+    </tr>
+    <tr class="row">
+    <th class="col-2 text-right"> Findings count </th><th class="col-10">  MEDIUM: 1, HIGH: 2, LOW: 2. </th>
+    </tr>
+    </table> 
+    
+        <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Severity</th>
+                <th scope="col">Type</th>
+                <th scope="col">Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            
+                <tr>
+                    <th scope="row">Port 22 is reachable from an Internet Gateway - TCP</th>
+                    <td>MEDIUM</td>
+                    <td>NETWORK_REACHABILITY</td>
+                    <td>On the instance i-0b14657ac5c95f8a0, the port range 22-22 is reachable from the InternetGateway igw-0d843f1069d0feaf5 from an attached ENI eni-0b917ff7fd67fb075.</td>
+                </tr>
+            
+                <tr>
+                    <th scope="row">Port range 0 to 65535 is reachable from an Internet Gateway - TCP</th>
+                    <td>HIGH</td>
+                    <td>NETWORK_REACHABILITY</td>
+                    <td>On the instance i-0b14657ac5c95f8a0, the port range 0-65535 is reachable from the InternetGateway igw-0d843f1069d0feaf5 from an attached ENI eni-0b917ff7fd67fb075.</td>
+                </tr>
+            
+                <tr>
+                    <th scope="row">Port 443 is reachable from an Internet Gateway - TCP</th>
+                    <td>LOW</td>
+                    <td>NETWORK_REACHABILITY</td>
+                    <td>On the instance i-0b14657ac5c95f8a0, the port range 443-443 is reachable from the InternetGateway igw-0d843f1069d0feaf5 from an attached ENI eni-0b917ff7fd67fb075.</td>
+                </tr>
+            
+                <tr>
+                    <th scope="row">Port 80 is reachable from an Internet Gateway - TCP</th>
+                    <td>LOW</td>
+                    <td>NETWORK_REACHABILITY</td>
+                    <td>On the instance i-0b14657ac5c95f8a0, the port range 80-80 is reachable from the InternetGateway igw-0d843f1069d0feaf5 from an attached ENI eni-0b917ff7fd67fb075.</td>
+                </tr>
+            
+                <tr>
+                    <th scope="row">Port range 0 to 65535 is reachable from an Internet Gateway - UDP</th>
+                    <td>HIGH</td>
+                    <td>NETWORK_REACHABILITY</td>
+                    <td>On the instance i-0b14657ac5c95f8a0, the port range 0-65535 is reachable from the InternetGateway igw-0d843f1069d0feaf5 from an attached ENI eni-0b917ff7fd67fb075.</td>
+                </tr>
+            
+        </tbody>
+    </table>
+    
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+        crossorigin="anonymous"></script>
+</div>
+</body>
+ 
+</html>
